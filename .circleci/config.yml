@@ -6,8 +6,8 @@ executors:
     machine: true
     working_directory: ~/robot
     
- commands:
-   robot_autotest:
+commands:
+  robot_autotest:
     description: "Robot auto test, UI testing or build test data"
     parameters:
       ENV:
