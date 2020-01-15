@@ -2,60 +2,60 @@
 version: 2.1
 
 executors:
-  robot_autotest_executor:
-    machine: true
-    working_directory: ~/robot
+  cypress_executor:
+    docker:
+      - image: circleci/node:10.16.3
+    working_directory: ~/cypress
     
 commands:
-  robot_autotest:
-    description: "Robot auto test, UI testing or build test data"
+  cypress_autotest:
+    description: "Cypress auto test"
     parameters:
       ENV:
         type: string
-      TYPE:
-        type: string
-      EXCLUDE:
+      BROWSER:
         type: string
         default: ""
     steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - setup_remote_docker
       - run:
-          name: Start << parameters.ENV >> << parameters.TYPE >>
+          name: Load archived Docker image
+          command: docker load -i /tmp/workspace/cypress-autotest.tar
+      - run:
+          name: run test case
           environment:
             ENV: << parameters.ENV >>
-            TYPE: << parameters.TYPE >>
-            EXCLUDE: << parameters.EXCLUDE >>
+            BROWSER: << parameters.BROWSER >>
           command: |
-            $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
-            docker pull $DOCKER_REPO_URL/robot-autotest
-            echo "Robot autotest running, env: ${ENV}, type: ${TYPE}, exclude: ${EXCLUDE}"
-            docker run -e ENV=${ENV} -e TYPE=${TYPE} -e EXCLUDE=${EXCLUDE} $DOCKER_REPO_URL/robot-autotest
+            docker run -e ENV=${ENV} -e BROWSER=${BROWSER} cypress-autotest
             
- jobs:
-   build:
-     docker: 
-       - image: circleci/node:4.8.2 # the primary container, where your job's commands are run
-     steps:
-       - checkout # check out the code in the project directory
-       - run: echo "hello world" # run the `echo` command
+jobs:
+ build:
+   docker: 
+     - image: circleci/node:4.8.2 # the primary container, where your job's commands are run
+   steps:
+     - checkout # check out the code in the project directory
+     - run: echo "hello world" # run the `echo` command
        
-   init_data:
-    executor: robot_autotest_executor
+  cy_ui_dev:
+    executor: cypress_executor
     parameters:
-      ENV:
-        type: string
+      IS_SEND_NOTIFICATION:
+        type: boolean
+        default: false
     steps:
-      - robot_autotest:
-          ENV: << parameters.ENV >>
-          TYPE: "InitData"
+      - cypress_autotest:
+          ENV: "dev"
+          BROWSER: "chrome"
 
 workflows:
   version: 2
   app-ui-test:
     jobs:
       - build
-      - init_data:
-          name: dev_init_data_android
-          ENV: dev
-          context: next-platform-build
+      - cy_ui_dev:
+          context: next-platform-dev
           requires:
             - build
