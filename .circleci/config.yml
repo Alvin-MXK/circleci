@@ -1,57 +1,61 @@
+
 version: 2.1
-jobs:
-  Hello-World:
-    docker:
-      - image: alpine:3.7
+
+executors:
+  robot_autotest_executor:
+    machine: true
+    working_directory: ~/robot
+    
+ commands:
+   robot_autotest:
+    description: "Robot auto test, UI testing or build test data"
+    parameters:
+      ENV:
+        type: string
+      TYPE:
+        type: string
+      EXCLUDE:
+        type: string
+        default: ""
     steps:
       - run:
-          name: Hello World
+          name: Start << parameters.ENV >> << parameters.TYPE >>
+          environment:
+            ENV: << parameters.ENV >>
+            TYPE: << parameters.TYPE >>
+            EXCLUDE: << parameters.EXCLUDE >>
           command: |
-            echo 'Hello World!'
-            echo 'This is the delivery pipeline'
-  I-Have-Code:
-    docker:
-      - image: alpine:3.7
+            $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+            docker pull $DOCKER_REPO_URL/robot-autotest
+            echo "Robot autotest running, env: ${ENV}, type: ${TYPE}, exclude: ${EXCLUDE}"
+            docker run -e ENV=${ENV} -e TYPE=${TYPE} -e EXCLUDE=${EXCLUDE} $DOCKER_REPO_URL/robot-autotest
+            
+ jobs:
+   build:
+     docker: 
+       - image: circleci/node:4.8.2 # the primary container, where your job's commands are run
+     steps:
+       - checkout # check out the code in the project directory
+       - run: echo "hello world" # run the `echo` command
+       
+   init_data:
+    executor: robot_autotest_executor
+    parameters:
+      ENV:
+        type: string
     steps:
-      - checkout
-      - run:
-          name: Code Has Arrived
-          command: |
-            ls -al
-            echo '^^^That should look familiar^^^'
-  Run-With-Node:
-    docker:
-      - image: circleci/node:10-browsers
-    steps:
-      - run:
-          name: Running In A Container With Node
-          command: |
-            node -v
-  Now-Complete:
-    docker:
-      - image: alpine:3.7
-    steps:
-      - run:
-          name: Approval Complete
-          command: |
-            echo 'Do work once the approval has completed'
+      - robot_autotest:
+          ENV: << parameters.ENV >>
+          TYPE: "InitData"
 
 workflows:
- version: 2
- Example_Workflow:
-   jobs:
-     - Hello-World
-     - I-Have-Code:
-         requires:
-           - Hello-World
-     - Run-With-Node:
-         requires:
-           - Hello-World
-     - Hold-For-Approval:
-         type: approval
-         requires:
-           - Run-With-Node
-           - I-Have-Code
-     - Now-Complete:
-         requires:
-           - Hold-For-Approval
+  version: 2
+  app-ui-test:
+    jobs:
+      - build
+      - init_data:
+          name: dev_init_data_android
+          ENV: dev
+          context: next-platform-build
+          requires:
+            - build
