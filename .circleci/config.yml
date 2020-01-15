@@ -13,7 +13,7 @@ jobs:
 
             BUILD_INFO=$(curl -X POST -H -d \
                 "{}" \
-                "https://circleci.com/api/v1/project/NextDeveloperTeam/CypressAutoTest/tree/master?circle-token=f29269792a9786ef612ece08e58d13886677ded3")
+                "https://circleci.com/api/v1/project/NextDeveloperTeam/CypressAutoTest/tree/master/cypress-pipeline?circle-token=f29269792a9786ef612ece08e58d13886677ded3")
 
             printf "\n\nBuild triggered\n\n"
-            printf "Follow the progress of the build on \nhttps://circleci.com/gh/NextDeveloperTeam/CypressAutoTest/tree/master"
+            printf "Follow the progress of the build on \nhttps://circleci.com/gh/NextDeveloperTeam/CypressAutoTest/tree/master/cypress-pipeline"
