@@ -1,20 +1,17 @@
-version: 2.1 # Use version 2.1 to enable orb usage.
-
-orbs:
-  win: circleci/windows@2.2.0 # The Windows orb give you everything you need to start using the Windows executor.
-
+version: 2.1
 jobs:
   build:
-    executor:
-      name: win/default
+    docker:
+      - image: alpine:3.7
     steps:
-      # default shell is Powershell
-      - run:            
-         command: $(echo hello | Out-Host; $?) -and $(echo world | Out-Host; $?)
-         shell: powershell.exe
+      - checkout
       - run:
-         command: echo hello && echo world
-         shell: bash.exe
+          name: The First Step
+          command: |
+            echo 'Hello World!'
+            echo 'This is the delivery pipeline'
       - run:
-         command: echo hello & echo world
-         shell: cmd.exe
+          name: Code Has Arrived
+          command: |
+            ls -al
+            echo '^^^That should look familiar^^^'
