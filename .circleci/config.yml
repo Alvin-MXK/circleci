@@ -1,60 +1,19 @@
-
 version: 2.1
-
-executors:
-  cypress_executor:
-    docker:
-      - image: circleci/node:10.16.3
-    working_directory: ~/cypress
-    
-commands:
-  cypress_autotest:
-    description: "Cypress auto test"
-    parameters:
-      ENV:
-        type: string
-      BROWSER:
-        type: string
-        default: ""
-    steps:
-      - attach_workspace:
-          at: /tmp/workspace
-      - setup_remote_docker
-      - run:
-          name: Load archived Docker image
-          command: docker load -i /tmp/workspace/cypress-autotest.tar
-      - run:
-          name: run test case
-          environment:
-            ENV: << parameters.ENV >>
-            BROWSER: << parameters.BROWSER >>
-          command: |
-            docker run -e ENV=${ENV} -e BROWSER=${BROWSER} cypress-autotest
-            
 jobs:
   build:
     docker: 
       - image: circleci/node:4.8.2 # the primary container, where your job's commands are run
     steps:
       - checkout # check out the code in the project directory
-      - run: echo "hello world" # run the `echo` command
-       
-  cy_ui_dev:
-    executor: cypress_executor
-    parameters:
-      IS_SEND_NOTIFICATION:
-        type: boolean
-        default: false
-    steps:
-      - cypress_autotest:
-          ENV: "dev"
-          BROWSER: "chrome"
+      - run:
+          name: Trigger the Build Job
+          command: |
+            echo "hello world" # run the `echo` command
+            printf "Triggering an $PROJECT build on the $CIRCLE_BRANCH branch\n\n"
 
-workflows:
-  version: 2
-  app-ui-test:
-    jobs:
-      - build
-      - cy_ui_dev:
-          requires:
-            - build
+            BUILD_INFO=$(curl -X POST -H -d \
+                "{}" \
+                "https://circleci.com/api/v1/project/NextDeveloperTeam/CypressAutoTest/tree/master?circle-token=f29269792a9786ef612ece08e58d13886677ded3")
+
+            printf "\n\nBuild triggered\n\n"
+            printf "Follow the progress of the build on \nhttps://circleci.com/gh/NextDeveloperTeam/CypressAutoTest/tree/master"
