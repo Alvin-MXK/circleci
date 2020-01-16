@@ -12,8 +12,8 @@ jobs:
             printf "Triggering an $PROJECT build on the $CIRCLE_BRANCH branch\n\n"
 
             curl -u “f29269792a9786ef612ece08e58d13886677ded3”: \
-              -d build_parameters[CIRCLE_JOB]=cypress-pipeline \
+              -d build_parameters[CIRCLE_JOB]=cy_ui_dev \
               https://circleci.com/api/v1/project/NextDeveloperTeam/CypressAutoTest/tree/master
 
             printf "\n\nBuild triggered\n\n"
-            printf "Follow the progress of the build on \nhttps://circleci.com/gh/NextDeveloperTeam/CypressAutoTest/tree/master/cypress-pipeline"
+            printf "Follow the progress of the build on \nhttps://circleci.com/gh/NextDeveloperTeam/CypressAutoTest/tree/master"
