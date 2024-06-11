@@ -1,0 +1,169 @@
+# This config was automatically generated from your source code
+# Stacks detected: deps:node:.,package_manager:yarn:,test:jest:
+version: 2.1
+orbs:
+  node: circleci/node@5
+jobs:
+  code_test:
+    executor: node/default
+    environment:
+      JEST_JUNIT_OUTPUT_DIR: ./test-results/
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: yarn
+      - run:
+          command: yarn test
+  sync_sonar:
+    executor: node/default
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: yarn
+      - run:
+          name: Sync
+          command: echo "* Sync..."
+  build_and_deploy:
+    parameters:
+      environment:
+        type: string
+    # This is an example deploy job, not actually used by the workflow
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - run:
+          name: Build
+          command: |
+            env=<< parameters.environment >>
+            echo "* Build app - ${env}"
+      - run:
+          name: Deploy
+          command: |
+            env=<< parameters.environment >>
+            echo "* Deploy app - ${env}"
+workflows:
+  ### Pipeline for the master-branch
+  master-pipeline:
+    jobs:
+      - code_test:
+          filters:
+            branches:
+              only: master
+      - sync_sonar:
+          requires:
+            - code_test
+      - hold_deploy:
+          type: approval
+          name: hold_deploy_dev
+          requires:
+            - code_test
+
+      - build_and_deploy:
+          name: deploy_dev
+          environment: dev
+          requires:
+            - hold_deploy_dev
+
+      - hold_deploy:
+          type: approval
+          name: hold_deploy_test
+          requires:
+            - deploy_dev
+
+      - build_and_deploy:
+          name: deploy_test
+          environment: test
+          requires:
+            - hold_deploy_test
+
+      - hold_deploy:
+          type: approval
+          name: hold_deploy_demo
+          requires:
+            - deploy_test
+
+      - build_and_deploy:
+          name: deploy_demo
+          environment: demo
+          requires:
+            - hold_deploy_demo
+
+      - hold_deploy:
+          type: approval
+          name: hold_deploy_prod
+          requires:
+            - hold_deploy_demo
+
+      - build_and_deploy:
+          name: deploy_prod
+          environment: prod
+          requires:
+            - hold_deploy_prod
+
+  ### Pipeline for the hotfix-branch
+  hotfix-pipeline:
+    jobs:
+      - code_test:
+          filters:
+            branches:
+              only:
+                - /^hotfix.*/
+
+      - hold_hotfix_deploy:
+          type: approval
+          name: hold_hotfix_deploy_dev
+          requires:
+            - code_test
+
+      - build_and_deploy:
+          name: deploy_hotfix_dev
+          environment: dev
+          requires:
+            - hold_hotfix_deploy_dev
+
+      - hold_hotfix_deploy:
+          type: approval
+          name: hold_hotfix_deploy_test
+          requires:
+            - code_test
+
+      - build_and_deploy:
+          name: deploy_hotfix_test
+          environment: test
+          requires:
+            - hold_hotfix_deploy_test
+
+      - hold_hotfix_deploy:
+          type: approval
+          name: hold_hotfix_deploy_demo
+          requires:
+            - code_test
+
+      - build_and_deploy:
+          name: deploy_hotfix_demo
+          environment: demo
+          requires:
+            - hold_hotfix_deploy_demo
+
+      - hold_hotfix_deploy:
+          type: approval
+          name: hold_hotfix_deploy_prod
+          requires:
+            - code_test
+
+      - build_and_deploy:
+          name: deploy_hotfix_prod
+          environment: prod
+          requires:
+            - hold_hotfix_deploy_prod
+
+  ### Pipeline for the feature-branch
+  feature-pipeline:
+    jobs:
+      - code_test:
+          filters:
+            branches:
+              ignore:
+                - master
+                - /^hotfix.*/
