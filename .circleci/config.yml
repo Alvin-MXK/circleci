@@ -1,5 +1,4 @@
 # This config was automatically generated from your source code
-# Stacks detected: deps:node:.,package_manager:yarn:
 version: 2.1
 orbs:
   node: circleci/node@5
@@ -13,7 +12,7 @@ jobs:
           pkg-manager: yarn
       - run:
           name: Run tests
-          command: yarn test --passWithNoTests
+          command: yarn run test
   build-node:
     # Build node project
     executor: node/default
@@ -49,6 +48,3 @@ workflows:
       - build-node:
           requires:
             - test-node
-    # - deploy:
-    #     requires:
-    #       - build-node
