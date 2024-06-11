@@ -14,10 +14,19 @@ jobs:
           pkg-manager: yarn
       - run:
           command: yarn test
+  sync_sonar:
+    executor: node/default
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: yarn
+      - run:
+          name: Sync
+          command: echo "* Sync..."
   build_and_deploy:
     parameters:
-    environment:
-      type: string
+      environment:
+        type: string
     # This is an example deploy job, not actually used by the workflow
     docker:
       - image: cimg/base:stable
