@@ -84,12 +84,8 @@ workflows:
           filters:
             branches:
               only: master
+
       - sync_sonar:
-          requires:
-            - code_test
-      - hold_deploy:
-          type: approval
-          name: hold_deploy_dev
           requires:
             - code_test
 
@@ -97,7 +93,7 @@ workflows:
           name: deploy_dev
           environment: dev
           requires:
-            - hold_deploy_dev
+            - code_test
 
       - hold_deploy:
           type: approval
