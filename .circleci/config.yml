@@ -4,7 +4,7 @@ version: 2.1
 jobs:
   code_test:
     docker:
-      - image: cimg/node:14
+      - image: circleci/node:14
     steps:
       - checkout
       - restore_cache:
@@ -29,7 +29,7 @@ jobs:
 
   sync_sonar:
     docker:
-      - image: cimg/node:14
+      - image: circleci/node:14
     steps:
       - checkout
       - restore_cache:
@@ -52,7 +52,7 @@ jobs:
       environment:
         type: string
     docker:
-      - image: cimg/node:14
+      - image: circleci/node:14
     steps:
       - checkout
       - restore_cache:
